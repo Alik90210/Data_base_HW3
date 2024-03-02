@@ -8,9 +8,9 @@ order by count desc
 --Найти сумму транзакций за каждый месяц по сферам деятельности, отсортировав по месяцам и по сфере деятельности. — (1 балл)
 
 select job_industry_category, date_trunc('month', transaction_date::date)::date as months, sum(standard_cost) as month_sum
-from customer_2
-join transactions
-on customer_2.customer_id = transactions.customer_id 
+from transactions
+join customer_2
+on transactions.customer_id = customer_2.customer_id 
 
 group by job_industry_category, months
 order by job_industry_category, months
@@ -18,9 +18,9 @@ order by job_industry_category, months
 --Вывести количество онлайн-заказов для всех брендов в рамках подтвержденных заказов клиентов из сферы IT. — (1 балл)
 
 select count(*) as order_count, brand, order_status, online_order
-from customer_2
-join transactions
-on customer_2.customer_id = transactions.customer_id 
+from transactions
+join customer_2
+on transactions.customer_id = customer_2.customer_id 
 where job_industry_category = 'IT' and order_status = 'Approved' and online_order = 'True'
 group by brand, order_status, online_order
 order by order_count desc, brand
@@ -31,9 +31,9 @@ order by order_count desc, brand
 --with group by
 
 select customer_2.customer_id, count(transaction_id) as trans_count, min(list_price) as trans_min, max(list_price) as trans_max, sum(list_price) as trans_sum
-from customer_2
-join transactions
-on customer_2.customer_id = transactions.customer_id 
+from transactions
+join customer_2
+on transactions.customer_id = customer_2.customer_id 
 group by customer_2.customer_id 
 order by trans_sum desc, trans_count desc
 
@@ -45,15 +45,15 @@ min(list_price) over (partition by customer_2.customer_id) as trans_min,
 max(list_price) over (partition by customer_2.customer_id) as trans_max,
 sum(list_price) over (partition by customer_2.customer_id) as trans_sum
 
-from customer_2
-join transactions
-on customer_2.customer_id = transactions.customer_id 
+from transactions
+join customer_2
+on transactions.customer_id = customer_2.customer_id  
 order by trans_sum desc, trans_count desc
 
 --Найти имена и фамилии клиентов с минимальной/максимальной суммой транзакций за весь период (сумма транзакций не может быть null). 
 --Напишите отдельные запросы для минимальной и максимальной суммы. — (2 балла)
 
--- customer name with max value
+-- customer name with max sum value
 with trans_sum_rank_customer
 as
 	(
@@ -108,11 +108,11 @@ where rank_sum = 1
 
 with tansaction_date_customer_id
 as 
-	(select first_name, last_name, customer_2.customer_id, transaction_date::date as trans_date, transaction_id
-	from customer_2
-	join transactions
-	on customer_2.customer_id = transactions.customer_id
-	order by customer_2.customer_id, trans_date)
+	(select first_name, last_name, transactions.customer_id, transaction_date::date as trans_date, transaction_id
+	from transactions
+	join customer_2
+	on transactions.customer_id = customer_2.customer_id 
+	order by transactions.customer_id, trans_date)
 	
 select first_name, last_name, customer_id, trans_date, transaction_id,
 first_value(transaction_id) over (partition by customer_id) as first_trunsaction
@@ -128,10 +128,10 @@ as
 			(
 				with tansaction_date_customer_id
 				as 
-					(select first_name, last_name, customer_2.customer_id, job_title, transaction_date::date as trans_date, transaction_id
-					from customer_2
-					join transactions
-					on customer_2.customer_id = transactions.customer_id
+					(select first_name, last_name, transactions.customer_id, job_title, transaction_date::date as trans_date, transaction_id
+					from transactions
+					join customer_2
+					on transactions.customer_id = customer_2.customer_id
 					order by customer_2.customer_id, trans_date)
 					
 				select first_name, last_name, customer_id, trans_date, transaction_id,
